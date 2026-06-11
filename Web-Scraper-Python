@@ -1,0 +1,54 @@
+import requests
+from bs4 import BeautifulSoup
+import csv
+
+class WebScraper:
+    def __init__(self, base_url):
+        self.base_url = base_url
+        self.data = []
+
+    def scrape_page(self, page_number):
+        url = f"{self.base_url}/page/{page_number}"
+
+        try:
+            response = requests.get(url)
+            response.raise_for_status()
+
+            soup = BeautifulSoup(response.text, "html.parser")
+
+            quotes = soup.find_all("div", class_="quote")
+
+            for quote in quotes:
+                text = quote.find("span", class_="text").get_text()
+                author = quote.find("small", class_="author").get_text()
+
+                self.data.append({
+                    "Quote": text,
+                    "Author": author
+                })
+
+            print(f"Page {page_number} scraped successfully.")
+
+        except Exception as e:
+            print(f"Error scraping page {page_number}: {e}")
+
+    def scrape_multiple_pages(self, total_pages):
+        for page in range(1, total_pages + 1):
+            self.scrape_page(page)
+
+    def save_to_csv(self, filename):
+        with open(filename, "w", newline="", encoding="utf-8") as file:
+            writer = csv.DictWriter(file, fieldnames=["Quote", "Author"])
+
+            writer.writeheader()
+            writer.writerows(self.data)
+
+        print(f"Data saved to {filename}")
+
+# Main Program
+if __name__ == "__main__":
+    scraper = WebScraper("https://quotes.toscrape.com")
+
+    scraper.scrape_multiple_pages(5)
+
+    scraper.save_to_csv("quotes_data.csv")
