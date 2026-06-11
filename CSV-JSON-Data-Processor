@@ -1,0 +1,50 @@
+import pandas as pd
+import json
+
+class DataProcessor:
+    def __init__(self, input_file):
+        self.input_file = input_file
+        self.data = None
+
+    def load_data(self):
+        if self.input_file.endswith('.csv'):
+            self.data = pd.read_csv(self.input_file)
+        elif self.input_file.endswith('.json'):
+            with open(self.input_file, 'r') as file:
+                self.data = pd.DataFrame(json.load(file))
+        else:
+            raise ValueError("Unsupported file format")
+
+        print("Data Loaded Successfully")
+
+    def clean_data(self):
+        self.data.drop_duplicates(inplace=True)
+        self.data.fillna("Unknown", inplace=True)
+        print("Data Cleaned Successfully")
+
+    def transform_data(self):
+        self.data.columns = [col.upper() for col in self.data.columns]
+        print("Data Transformed Successfully")
+
+    def save_csv(self, output_file):
+        self.data.to_csv(output_file, index=False)
+        print(f"Processed data saved to {output_file}")
+
+    def save_json(self, output_file):
+        self.data.to_json(output_file,
+                          orient='records',
+                          indent=4)
+        print(f"Processed data saved to {output_file}")
+
+def main():
+    processor = DataProcessor("sample.csv")
+
+    processor.load_data()
+    processor.clean_data()
+    processor.transform_data()
+
+    processor.save_csv("cleaned_data.csv")
+    processor.save_json("cleaned_data.json")
+
+if __name__ == "__main__":
+    main()
